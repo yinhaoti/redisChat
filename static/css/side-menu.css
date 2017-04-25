@@ -40,6 +40,11 @@ This is the parent `<div>` that contains the menu and the content area.
 The content `<div>` is where all your content goes.
 */
 
+.rc-channel.active {
+    background: rgb(72, 72, 72);
+}
+
+
 .rc-main {
     position:relative;
     height: 400px;
@@ -57,17 +62,32 @@ The content `<div>` is where all your content goes.
 }
 
 .rc-chat {
+    padding-left: 0px;
+}
+
+#id-div-chats {
     list-style: none;
     overflow: auto;
     height: 74vh;
+    padding-left: 52px;
+    margin-left: 0px;
 }
 
-.rc-chat-portrait {
+
+
+.rc-chat-avatar {
     float: left;
     margin-left: -30px;
     margin-right: 21px;
     margin-top: 2px;
 }
+
+#id-rc-chat-avatar{
+    width: 45px;
+    margin-right: -4px;
+    margin-left: 1px;
+}
+
 
 .rc-input {
    position: fixed;

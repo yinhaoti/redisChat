@@ -1,18 +1,64 @@
 from flask import Flask
 from flask_migrate import Migrate, MigrateCommand
 from flask_script import Manager
-
-
 from models import db
 # 这里 import 具体的 Model 类是为了给 migrate 用
 # 如果不 import 那么无法迁移
 # 这是 SQLAlchemy 的机制
 from models.todo import Todo
 from models.user import User
+import redis
 
+
+
+'''
+
+# 启动方式(macOS)
+# 安装redis, 使用配置文件启动redis-server
+redis-server /usr/local/etc/redis.conf
+# 然后使用 命令号运行
+
+# 使用 gunicorn 启动
+gunicorn --worker-class=gevent -t 2 -b 0.0.0.0:3005 wsgi
+gunicorn --worker-class=gevent -t 2 redischat:app  #需要配置文件 Config之后才能用
+# 开启 debug 输出
+gunicorn --log-level debug --worker-class=gevent -t 2 -b 0.0.0.0:3008 redischat:app
+# 把 gunicorn 输出写入到 gunicorn.log 文件中
+gunicorn --log-level debug --access-logfile gunicorn.log --worker-class=gevent -t 2 redischat:app
+
+'''
+
+
+# 连接上本机的 redis 服务器
+# 所以要先打开 redis 服务器
+red = redis.Redis(host='localhost', port=6379, db=0)
+print('redis', red)
+
+# 发布聊天广播的 redis 频道
+chat_channel = 'chat'
 
 app = Flask(__name__)
 manager = Manager(app)
+
+
+def stream():
+    '''
+    监听 redis 广播并 sse 到客户端
+    '''
+    # 对每一个用户 创建一个 redis [发布订阅]对象
+    pubsub = red.pubsub()
+    # 订阅广播频道
+    pubsub.subscribe(chat_channel)
+    # 监听订阅的广播
+    for message in pubsub.listen():
+        print(message)
+        if message['type'] == 'message':
+            data = message['data'].decode('utf=8')
+            # 用 sse 返回给前端  'data: {}\n\n' 是sse的返回格式规范
+            # yield 临时性返回给前端，然后进入下一次循环
+            yield 'data: {}\n\n'.format(data)
+
+
 
 # 自定义过滤器
 # 过滤器的名字是参数 xcxx
